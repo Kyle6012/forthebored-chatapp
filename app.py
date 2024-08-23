@@ -2,10 +2,14 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from flask_socketio import SocketIO, join_room, leave_room, emit
 from utils.db import create_tables, add_user, verify_user, get_db_connection
 from werkzeug.security import generate_password_hash, check_password_hash
+import eventlet
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 
 app = Flask(__name__)
 app.secret_key = 'bealthguy701'
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='eventlet')
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
 
 create_tables()
 
@@ -99,4 +103,4 @@ def save_private_message(sender, receiver, message):
     conn.close()
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5000)
