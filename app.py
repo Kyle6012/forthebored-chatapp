@@ -1,8 +1,10 @@
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_socketio import SocketIO, join_room, leave_room, emit
 from utils.db import create_tables, add_user, verify_user, get_db_connection
 from werkzeug.security import generate_password_hash, check_password_hash
-import eventlet
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 
