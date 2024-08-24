@@ -2,7 +2,7 @@ import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
 
 def get_db_connection():
-    conn = sqlite3.connect('chat.db', timeout=10)  
+    conn = sqlite3.connect('chat.db', timeout=10)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -64,3 +64,11 @@ def verify_user(username, password):
     if user and check_password_hash(user['password'], password):
         return True
     return False
+
+def check_email(email):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE email = ?', (email,))
+    result = cursor.fetchone()
+    conn.close()
+    return result is not None

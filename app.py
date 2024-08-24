@@ -3,10 +3,9 @@ eventlet.monkey_patch()
 
 from flask import Flask, render_template, request, redirect, url_for, session
 from flask_socketio import SocketIO, join_room, leave_room, emit
-from utils.db import create_tables, add_user, verify_user, get_db_connection
+from utils.db import create_tables, add_user, verify_user, get_db_connection, check_email
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.middleware.proxy_fix import ProxyFix
-
 
 app = Flask(__name__)
 app.secret_key = 'bealthguy701'
@@ -23,7 +22,7 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':  
+    if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         if verify_user(username, password):
@@ -39,10 +38,12 @@ def register():
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
+        if check_email(email):
+            return 'Email already registered', 400
         if add_user(username, email, password):
             return redirect(url_for('login'))
         else:
-            return 'Username already exists!', 400  
+            return 'Username already exists!', 400
     return render_template('register.html')
 
 @app.route('/logout')
@@ -58,7 +59,7 @@ def chat():
 
 @socketio.on('join')
 def handle_join(data):
-    username = session.get('username') 
+    username = session.get('username')
     room = data['room']
     join_room(room)
     emit('status', {'msg': f'{username} has entered the room.'}, room=room)
@@ -67,7 +68,7 @@ def handle_join(data):
 def handle_message(data):
     room = data['room']
     username = session.get('username')
-    
+
     if not username:
         return 'User not found!'
 
@@ -76,7 +77,7 @@ def handle_message(data):
     emit('message', {'msg': message, 'username': username}, room=room)
 
 @socketio.on('private_message')
-def handle_private_message(data):  
+def handle_private_message(data):
     sender = session.get('username')
     receiver = data['receiver']
     message = data['msg']
